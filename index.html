@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZPCB — Adaptive Explanation Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=JetBrains+Mono:wght@300;400;500&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ═══ MEMPHIS BLUE PALETTE (PMS 2945) ═══ */
+  --memphis: #004C97;
+  --memphis-deep: #003570;
+  --memphis-mid: #005BB5;
+  --memphis-light: #0069CC;
+  --memphis-pale: rgba(0,76,151,0.15);
+  --memphis-surface: #001f42;
+  --memphis-card: #002a5a;
+
+  /* ═══ FIRE PALETTE — ACTION ELEMENTS ONLY ═══ */
+  --fire-core: #FF4500;
+  --fire-deep: #FF1A00;
+  --fire-mid: #FF6B00;
+  --fire-amber: #FF9500;
+  --fire-gold: #FFD700;
+  --fire-pale: rgba(255,69,0,0.12);
+  --fire-border: rgba(255,149,0,0.35);
+  --fire-glow: rgba(255,69,0,0.25);
+
+  /* ═══ TEXT & NEUTRAL ═══ */
+  --white: #ffffff;
+  --text: #e8f0f8;
+  --text-mid: #a8c0d8;
+  --text-dim: #6888a8;
+  --text-ghost: #3a5878;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.15);
+
+  /* ═══ LEGACY ALIASES for compatibility ═══ */
+  --ivory: #e8f0f8;
+  --ivory-dark: #c8dce8;
+  --ivory-mid: #d8e8f4;
+  --navy: var(--memphis-surface);
+  --navy-mid: var(--memphis-deep);
+  --navy-light: var(--memphis);
+  --gold: var(--fire-amber);
+  --gold-light: var(--fire-gold);
+  --gold-pale: var(--fire-pale);
+  --gold-border: var(--fire-border);
+  --teal: #00a8cc;
+  --teal-pale: rgba(0,168,204,0.10);
+  --red-pale: rgba(255,26,0,0.10);
+  --red: var(--fire-deep);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--memphis-surface);
+  color: var(--text);
+  font-family: 'Jost', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Fire ambient glow */
+body::before {
+  content: '';
+  position: fixed;
+  bottom: -100px; left: 50%;
+  transform: translateX(-50%);
+  width: 800px; height: 400px;
+  background: radial-gradient(ellipse, rgba(255,69,0,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Grain texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.3;
+}
+
+.page-wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ═══ HEADER ═══ */
+.site-header {
+  background: linear-gradient(135deg, var(--memphis-surface) 0%, var(--memphis-deep) 100%);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 2px solid var(--fire-core);
+}
+
+.site-header::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,149,0,0.10) 0%, transparent 70%);
+}
+
+.header-inner {
+  padding: 40px 32px 36px;
+  max-width: 1140px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 24px;
+}
+
+.header-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--fire-amber);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 300;
+  line-height: 1.05;
+  color: var(--ivory);
+  letter-spacing: -0.02em;
+}
+
+.header-title em {
+  font-style: italic;
+  color: var(--fire-gold);
+}
+
+.header-subtitle {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(168,192,216,0.7);
+  line-height: 1.6;
+  max-width: 480px;
+}
+
+.header-seal {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.seal-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--fire-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  background: rgba(255,69,0,0.08);
+  box-shadow: 0 0 20px rgba(255,69,0,0.15);
+}
+
+.seal-abbr {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--fire-gold);
+  letter-spacing: 0.05em;
+}
+
+.seal-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  letter-spacing: 0.15em;
+  color: rgba(255,213,0,0.6);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.foundation-bar {
+  background: rgba(255,69,0,0.08);
+  border-top: 1px solid rgba(255,69,0,0.25);
+  padding: 8px 32px;
+  max-width: 100%;
+}
+
+.foundation-bar-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.foundation-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--fire-gold);
+  letter-spacing: 0.03em;
+}
+
+.foundation-motto {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: rgba(255,149,0,0.6);
+  text-transform: uppercase;
+}
+
+/* ═══ INSTRUCTION BAND ═══ */
+.instruction-band {
+  background: var(--memphis-deep);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 32px;
+}
+
+.instruction-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.instruction-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--fire-pale);
+  border: 1px solid var(--fire-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(255,69,0,0.15);
+}
+
+.instruction-text {
+  font-size: 13px;
+  color: var(--text-mid);
+  font-weight: 300;
+}
+
+.instruction-text strong {
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ═══ PERSONA GRID ═══ */
+.persona-section {
+  padding: 32px 0 24px;
+}
+
+.section-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-ghost);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  padding: 0 32px;
+  max-width: 1140px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.persona-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 8px;
+  padding: 0 32px;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.persona-btn {
+  background: var(--memphis-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 14px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.persona-btn:hover {
+  border-color: var(--fire-mid);
+  box-shadow: 0 2px 12px rgba(255,107,0,0.2);
+  transform: translateY(-1px);
+}
+
+.persona-btn.active {
+  border-color: var(--fire-core);
+  background: var(--fire-pale);
+  box-shadow: 0 2px 20px rgba(255,69,0,0.25);
+}
+
+.persona-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--fire-deep), var(--fire-core), var(--fire-amber), var(--fire-gold));
+  border-radius: 6px 6px 0 0;
+}
+
+.p-icon { font-size: 18px; display: block; margin-bottom: 6px; }
+.p-name { font-size: 12px; font-weight: 500; color: var(--text); display: block; margin-bottom: 2px; }
+.p-role { font-size: 10px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+
+/* ═══ MAIN PANEL ═══ */
+.main-panel {
+  padding: 0 32px 48px;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.explanation-card {
+  background: var(--memphis-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.35s ease;
+  margin-top: 20px;
+}
+
+.explanation-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Card header */
+.card-header {
+  background: linear-gradient(135deg, var(--memphis-deep) 0%, var(--memphis) 100%);
+  padding: 24px 32px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 2px solid var(--fire-core);
+}
+
+.card-header::after {
+  content: '';
+  position: absolute;
+  right: -40px; top: -40px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,149,0,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.card-badge {
+  background: var(--fire-pale);
+  border: 1px solid var(--fire-border);
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--fire-gold);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.card-title-wrap { flex: 1; }
+
+.card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(18px, 2.5vw, 26px);
+  font-weight: 400;
+  color: var(--white);
+  line-height: 1.2;
+}
+
+.card-source {
+  margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+
+/* Card body */
+.card-body {
+  padding: 32px;
+  background: var(--memphis-card);
+}
+
+.core-statement {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(17px, 2vw, 22px);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--text);
+  border-left: 3px solid var(--fire-core);
+  padding-left: 20px;
+  margin-bottom: 28px;
+}
+
+.explanation-body {
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--text-mid);
+  font-weight: 300;
+  margin-bottom: 28px;
+}
+
+/* Section label */
+.block-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* Key points grid */
+.points-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.point-card {
+  background: var(--memphis-deep);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  border-top: 2px solid var(--fire-mid);
+}
+
+.point-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--fire-amber);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.point-text {
+  font-size: 13px;
+  color: var(--text-mid);
+  line-height: 1.55;
+  font-weight: 300;
+}
+
+/* Analogy block */
+.analogy-block {
+  background: rgba(0,168,204,0.08);
+  border: 1px solid rgba(0,168,204,0.2);
+  border-radius: 6px;
+  padding: 18px 20px;
+  margin-bottom: 28px;
+}
+
+.analogy-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--teal);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.analogy-text {
+  font-size: 13px;
+  color: var(--text-mid);
+  line-height: 1.75;
+  font-style: italic;
+}
+
+/* Layers viz */
+.layers-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 28px;
+  font-size: 13px;
+}
+
+.layers-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--fire-amber);
+  text-transform: uppercase;
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--fire-border);
+  font-weight: 400;
+}
+
+.layers-table td {
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-mid);
+  font-weight: 300;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.layers-table td:first-child {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--fire-core);
+  width: 28px;
+  padding-right: 4px;
+}
+
+.layers-table td:nth-child(2) {
+  font-weight: 500;
+  color: var(--text);
+  width: 180px;
+}
+
+.layers-table tr:hover td { background: var(--memphis-deep); }
+
+/* Cert block */
+.cert-block {
+  background: var(--memphis-surface);
+  border: 1px solid var(--fire-border);
+  border-radius: 6px;
+  padding: 20px 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 2;
+  margin-bottom: 28px;
+  color: rgba(168,192,216,0.6);
+  box-shadow: inset 0 0 30px rgba(255,69,0,0.04);
+}
+
+.cert-key { color: var(--fire-amber); }
+.cert-pass { color: #4ade80; }
+.cert-zero { color: var(--fire-gold); }
+.cert-head { color: var(--fire-core); font-size: 12px; margin-bottom: 4px; }
+
+/* Alignment table */
+.align-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 28px;
+  font-size: 12px;
+}
+
+.align-table th {
+  background: linear-gradient(90deg, var(--memphis-deep), var(--memphis));
+  color: var(--fire-gold);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+
+.align-table th:first-child { border-radius: 6px 0 0 0; }
+.align-table th:last-child { border-radius: 0 6px 0 0; }
+
+.align-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-mid);
+  font-weight: 300;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.align-table td:first-child {
+  font-weight: 500;
+  color: var(--text);
+  background: var(--memphis-deep);
+}
+
+.align-table tr:last-child td:first-child { border-radius: 0 0 0 6px; }
+.align-table tr:last-child td:last-child { border-radius: 0 0 6px 0; }
+
+/* Stewardship tiers */
+.tier-list { margin-bottom: 28px; }
+
+.tier-row {
+  display: flex;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+  align-items: flex-start;
+  transition: all 0.15s ease;
+}
+
+.tier-row:hover {
+  background: var(--memphis-deep);
+  border-color: var(--fire-border);
+}
+
+.tier-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--fire-core);
+  width: 28px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.tier-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  width: 200px;
+  flex-shrink: 0;
+}
+
+.tier-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 300;
+  line-height: 1.5;
+}
+
+/* Implication block — FIRE ACTION ELEMENT */
+.implication {
+  background: linear-gradient(135deg, rgba(255,69,0,0.12) 0%, rgba(255,149,0,0.08) 100%);
+  border: 1px solid var(--fire-border);
+  border-left: 3px solid var(--fire-core);
+  border-radius: 6px;
+  padding: 18px 20px;
+}
+
+.implication-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--fire-amber);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.implication-text {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.75;
+  font-weight: 400;
+}
+
+/* Divider */
+.section-divider {
+  border: none;
+  border-top: 1px solid rgba(255,69,0,0.2);
+  margin: 24px 0;
+}
+
+/* Empty state */
+.empty-state {
+  padding: 64px 32px;
+  text-align: center;
+}
+
+.empty-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px solid var(--fire-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  box-shadow: 0 0 20px rgba(255,69,0,0.1);
+}
+
+.empty-ring span { font-size: 24px; opacity: 0.6; }
+
+.empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--text-mid);
+  margin-bottom: 8px;
+}
+
+.empty-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 300;
+}
+
+/* Footer */
+.site-footer {
+  background: var(--memphis-surface);
+  border-top: 2px solid var(--fire-core);
+  padding: 20px 32px;
+  margin-top: 0;
+}
+
+.footer-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.footer-left {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(232,240,248,0.5);
+}
+
+.footer-right {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: rgba(255,149,0,0.5);
+  text-transform: uppercase;
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.anim { opacity: 0; animation: fadeUp 0.3s ease forwards; }
+.d1 { animation-delay: 0.04s; }
+.d2 { animation-delay: 0.09s; }
+.d3 { animation-delay: 0.14s; }
+.d4 { animation-delay: 0.19s; }
+.d5 { animation-delay: 0.24s; }
+
+@media (max-width: 640px) {
+  .header-inner { grid-template-columns: 1fr; }
+  .header-seal { display: none; }
+  .foundation-motto { display: none; }
+  .persona-grid { grid-template-columns: repeat(3, 1fr); }
+  .align-table { font-size: 11px; }
+  .align-table th, .align-table td { padding: 8px; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="site-header">
+  <div class="header-inner">
+    <div>
+      <div class="header-eyebrow">Zero-Persistence Cryptographic Boundary · Adaptive Explanation Platform</div>
+      <h1 class="header-title">Understanding <em>ZPCB</em><br>in Your Language</h1>
+      <p class="header-subtitle">Select your role. Receive the explanation built for how your mind works — drawn from the complete ZPCB governance architecture.</p>
+    </div>
+    <div class="header-seal">
+      <div class="seal-circle">
+        <div class="seal-abbr">ZPCB</div>
+        <div class="seal-sub">Framework</div>
+      </div>
+    </div>
+  </div>
+  <div class="foundation-bar">
+    <div class="foundation-bar-inner">
+      <div class="foundation-name">Joseph & Margaret Ivy Foundation</div>
+      <div class="foundation-motto">If the disk doesn't spin · Liability doesn't begin</div>
+    </div>
+  </div>
+</div>
+
+<div class="instruction-band">
+  <div class="instruction-inner">
+    <div class="instruction-icon">◈</div>
+    <div class="instruction-text"><strong>Who is in this room?</strong> Select the role that best describes you or your audience. The framework adapts its explanation to your context.</div>
+  </div>
+</div>
+
+<div class="persona-section">
+  <div class="section-eyebrow">Select your role</div>
+  <div class="persona-grid" id="personaGrid">
+    <button class="persona-btn" onclick="selectPersona('executive', this)"><span class="p-icon">🏛️</span><span class="p-name">The Executive</span><span class="p-role">C-Suite / Board</span></button>
+    <button class="persona-btn" onclick="selectPersona('board', this)"><span class="p-icon">⚖️</span><span class="p-name">The Board Member</span><span class="p-role">Governance / Charter</span></button>
+    <button class="persona-btn" onclick="selectPersona('attorney', this)"><span class="p-icon">📋</span><span class="p-name">The Attorney</span><span class="p-role">Legal / Contract</span></button>
+    <button class="persona-btn" onclick="selectPersona('engineer', this)"><span class="p-icon">⚙️</span><span class="p-name">The Engineer</span><span class="p-role">Systems / Infra</span></button>
+    <button class="persona-btn" onclick="selectPersona('auditor', this)"><span class="p-icon">🛡️</span><span class="p-name">The Auditor</span><span class="p-role">Compliance / Risk</span></button>
+    <button class="persona-btn" onclick="selectPersona('clinician', this)"><span class="p-icon">🩺</span><span class="p-name">The Clinician</span><span class="p-role">Healthcare / Clinical</span></button>
+    <button class="persona-btn" onclick="selectPersona('pilot', this)"><span class="p-icon">🔬</span><span class="p-name">The Pilot Evaluator</span><span class="p-role">Cleveland Clinic</span></button>
+    <button class="persona-btn" onclick="selectPersona('safety', this)"><span class="p-icon">🛰️</span><span class="p-name">The Safety Officer</span><span class="p-role">Campus / Security</span></button>
+    <button class="persona-btn" onclick="selectPersona('investor', this)"><span class="p-icon">📈</span><span class="p-name">The Investor</span><span class="p-role">Capital / VC</span></button>
+    <button class="persona-btn" onclick="selectPersona('regulator', this)"><span class="p-icon">🏦</span><span class="p-name">The Regulator</span><span class="p-role">Policy / Gov</span></button>
+    <button class="persona-btn" onclick="selectPersona('operator', this)"><span class="p-icon">🚁</span><span class="p-name">The Operator</span><span class="p-role">Drone / Autonomous</span></button>
+    <button class="persona-btn" onclick="selectPersona('partner', this)"><span class="p-icon">🤝</span><span class="p-name">The Strategic Partner</span><span class="p-role">Vision / Long Game</span></button>
+    <button class="persona-btn" onclick="selectPersona('allseeing', this)"><span class="p-icon">👁️</span><span class="p-name">The All Seeing Boundary</span><span class="p-role">Observability / L2.5</span></button>
+  </div>
+</div>
+
+<div class="main-panel">
+  <div class="explanation-card" id="explanationCard">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-ring"><span>◈</span></div>
+      <div class="empty-title">Your explanation awaits</div>
+      <div class="empty-sub">Select a role above to receive your personalized ZPCB overview</div>
+    </div>
+    <div id="cardContent" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-left">Joseph & Margaret Ivy Foundation · ZPCB Constitutional Framework</div>
+    <div class="footer-right">Safety · Privacy · Resilience · Accountability</div>
+  </div>
+</div>
+
+<script>
+const data = {
+
+executive: {
+  badge: 'C-Suite / Board',
+  source: 'ZPCB Executive Brief · Five-Minute Overview',
+  title: 'A Structural Guarantee, Not a Security Promise',
+  statement: 'Traditional security defends the data you store. ZPCB eliminates the need to store it — and with it, the liability that comes with holding it.',
+  body: 'Healthcare institutions operating under traditional models collect sensitive identity data, store it across multiple systems, and assign security teams to defend it indefinitely. Every day that data exists in storage, it represents active exposure — breach risk, regulatory liability, reputational hazard. ZPCB introduces a fundamentally different model. Identity-bearing data enters a controlled transformation environment, is processed for its analytical value, and is cryptographically destroyed before it ever reaches persistent storage. What enters as a liability exits as a safe analytical signal.',
+  showLayers: true,
+  layers: [
+    ['01', 'Governance Charter', 'Institutional doctrine, stewardship roles, amendment authority, accountability structures'],
+    ['02', 'Architectural Boundary', 'Zero-Trust validation gates, transient processing environments, fail-closed enforcement'],
+    ['03', 'Operational Observability', 'Monitoring dashboards, boundary integrity alerts, standardized audit evidence'],
+    ['04', 'Workforce Competency', 'Five-tier Boundary Steward Certification — governance literacy at institutional scale']
+  ],
+  points: [
+    { label: 'Risk Architecture', text: 'ZPCB changes what the system is allowed to remember — not how well it guards what it already holds.' },
+    { label: 'Regulatory Posture', text: 'Certificates of Omission replace trust-based compliance with mathematically verifiable proof for auditors.' },
+    { label: 'Operational Continuity', text: 'Clinicians and staff workflows are unchanged. ZPCB operates invisibly within existing infrastructure.' },
+    { label: 'Strategic Advantage', text: 'Institutions running ZPCB can deploy advanced AI analytics that competitors cannot — without the exposure.' }
+  ],
+  analogy: 'Think of ZPCB as a shredder built into your front door. Documents are read the moment they arrive, the insight is extracted, and the original is destroyed before it ever enters the building. You receive the intelligence without ever holding the liability.',
+  implication: 'The question for your institution is no longer "how do we secure our data?" It is "why are we storing identity data we don\'t need to store?" ZPCB answers that question architecturally, not philosophically — and the answer produces a mathematically verifiable compliance record every time.'
+},
+
+board: {
+  badge: 'Governance / Charter Authority',
+  source: 'ZPCB Governance Charter · Constitutional Framework',
+  title: 'The Constitutional Layer of AI Governance',
+  statement: 'ZPCB establishes a governance constitution — not a policy document. It defines what the architecture is permitted to do, and places that authority above any single institutional deployment.',
+  body: 'The ZPCB Governance Charter functions as the constitutional authority governing all framework deployments. Where technical architecture enforces the Zero-Persistence Mandate at the system level, the Charter ensures that human governance remains equally structured, accountable, and auditable. This is the document that makes ZPCB governable by boards, not just by engineers.',
+  showTiers: true,
+  tiers: [
+    ['L1', 'Boundary Aware Personnel', 'Clinical and operational staff who understand the purpose and presence of the boundary'],
+    ['L2', 'Boundary Stewards', 'Operational monitors responsible for signal interpretation and regulatory audit support'],
+    ['L3', 'Escalation Responders', 'Incident response personnel trained to resolve fail-closed events without compromise'],
+    ['L4', 'Policy Governance Authorities', 'Data governance officers evaluating transformation policies and preventing identity leakage'],
+    ['L5', 'Architectural Custodians', 'Enterprise architects responsible for designing, deploying, and scaling ZPCB implementations']
+  ],
+  points: [
+    { label: 'Zero-Persistence Mandate', text: 'Article I establishes that identity-bearing data must never persist beyond the transformation boundary — under any operational circumstance.' },
+    { label: 'Architectural Sovereignty', text: 'Article II places the Master Hardened Reference Architecture above institutional adaptation. Institutions integrate ZPCB; they do not modify it.' },
+    { label: 'Amendment Authority', text: 'Article V requires that all modifications undergo formal Version Control Governance Protocol review — and may never compromise the Zero-Persistence Mandate.' },
+    { label: 'Boundary Sovereignty', text: 'Article VI establishes the boundary as a data sovereignty control. Once implemented, it becomes the definitive identity enforcement point.' }
+  ],
+  analogy: 'The ZPCB Charter functions as a constitutional document in the same way that institutional bylaws govern a hospital\'s board: it defines the limits of authority, the process for amendment, and the principles that no operational decision may override. It governs the governors.',
+  implication: 'ZPCB is the first AI governance framework with a constitutional architecture. That distinction matters enormously in a regulatory environment where "governance" is often a synonym for documentation. ZPCB makes governance structurally enforced — and structurally auditable.'
+},
+
+attorney: {
+  badge: 'Legal / Contract',
+  source: 'ZPCB Governance Charter · Sovereign Guardian Framework',
+  title: 'The Certificate of Omission as Legal Infrastructure',
+  statement: 'ZPCB shifts the burden of proof from your client\'s security posture to the architecture itself. You are no longer defending a policy — you are presenting mathematical evidence of restraint.',
+  body: 'Traditional data privacy litigation asks whether an institution adequately protected the data it stored. ZPCB reframes the inquiry entirely: did the institution retain the data at all? When the answer is cryptographically sealed on every transaction — a signed, timestamped Certificate of Omission with policy hash, firmware digest, and validation gate confirmation — the defense posture transforms from reactive to structural. Your client did not merely claim to comply. The architecture made non-compliance architecturally impossible.',
+  showAlign: true,
+  alignRows: [
+    ['Volatile RAM Flush', 'Zero data at rest — no PHI stored on processing systems or secondary servers', 'No stored record = no subpoenable data = search/seizure immunity by structural design'],
+    ['Certificate of Omission', 'Automated HIPAA audit trails without exposing protected data', 'Negative result certificate — mathematical proof that identity was never captured or retained'],
+    ['Fail-Closed Gate', 'Prevents unauthorized configuration drift from altering system behavior', 'Shields institution from liability if third parties attempt to hijack or modify system sensors'],
+    ['Lifeboat Protocol', 'Duty of care — prioritizes clinical response to those in biological distress', 'Establishes a legally robust Public Safety Exception via ethical architecture, not policy assertion']
+  ],
+  points: [
+    { label: 'UCC Structural Implications', text: 'IP housed in the holding company and licensed down creates a perfected security interest structure that protects the constitutional core from any partnership or acquisition pressure.' },
+    { label: 'Field-of-Use Licensing', text: 'Each industry vertical receives a separate license. Healthcare is not autonomous vehicles. Autonomous vehicles are not financial services. Each is a distinct, bounded engagement.' },
+    { label: 'Amendment Sovereignty', text: 'The Governance Charter\'s Article V requires formal Version Control Protocol review for any amendment — no partner may modify the foundational mandate by contract.' },
+    { label: 'Reversion Clauses', text: 'Pilot agreements should include defined deployment windows with automatic reversion. Validation must be mutual — not an indefinite evaluation that benefits only the institution.' }
+  ],
+  analogy: 'Imagine a witness who can testify not only that they did not commit the act, but produce a notarized, mathematically sealed record proving they were never in the building during the relevant window. That is what the Certificate of Omission produces for your client in a data privacy proceeding — not a claim of innocence, but architectural proof of structural impossibility.',
+  implication: 'ZPCB does not reduce liability. It restructures where liability can attach in the first place. The constitutional layer, the licensing architecture, and the cryptographic proof artifacts together represent a legal infrastructure play with implications that extend well beyond healthcare compliance.'
+},
+
+engineer: {
+  badge: 'Systems / Infrastructure',
+  source: 'ZPCB Executive Brief · Governance Charter Article II',
+  title: 'Deterministic Boundary Enforcement at the Architectural Layer',
+  statement: 'ZPCB is not access control around stored data. It is a fail-closed execution environment that prevents the persistence event from occurring in the first place.',
+  body: 'The architecture operates as a deterministic boundary enforcement model, not a traditional data processing pipeline. Incoming data passes through sequential zero-trust validation gates within the ZPCB boundary. Identity-bearing attributes are stripped or transformed within a controlled in-memory environment. Only safe analytical signals — fully transformed metadata — are permitted to enter persistent storage. The transformation event produces a cryptographic proof artifact. The identity data is destroyed. There is nothing left to breach.',
+  showCert: true,
+  points: [
+    { label: 'Zero-Trust Gate Sequence', text: 'Each gate evaluates identity-bearing attributes deterministically. No gate may be bypassed. No exception path exists by design.' },
+    { label: 'Fail-Closed Doctrine', text: 'Anomaly, configuration drift, or integrity violation halts processing entirely. The system refuses to operate in an unverified state — it does not degrade gracefully.' },
+    { label: 'MHRA Canonical Model', text: 'The Master Hardened Reference Architecture establishes immutable structural principles. Institutions adapt integration methods; they do not modify the enforcement model.' },
+    { label: 'Cryptographic Attestation', text: 'Every transformation event: transformation timestamp, policy version identifier, validation gate confirmation, cryptographic signature. Sealed. Immutable. Auditable.' }
+  ],
+  analogy: null,
+  implication: 'The elegance is in what the system structurally cannot do. There is no encrypted data store to breach. No access control list to misconfigure. No retention policy to violate by exception. The boundary is the security model. If the disk does not spin, liability does not begin.'
+},
+
+auditor: {
+  badge: 'Compliance / Risk',
+  source: 'ZPCB Governance Charter · Boundary Steward Certification Program',
+  title: 'Mathematical Proof of Compliance, Not Policy Assertion',
+  statement: 'ZPCB does not ask auditors to trust institutional policy. It produces cryptographic evidence of actual system behavior on every transaction.',
+  body: 'Most compliance frameworks rely on policy documentation, access logs, and security attestations that describe intended behavior. During an audit, compliance officers present what should have happened. ZPCB produces cryptographic evidence of what did happen — or more precisely, what the architecture made structurally impossible. The Certificate of Omission is not a policy document. It is a mathematical proof artifact, verifiable by any third-party auditor, confirming that identity-bearing data did not cross the persistence boundary during a specific operational window.',
+  points: [
+    { label: 'Certificate of Omission', text: 'Cryptographic proof per transaction: transformation timestamp, policy version ID, gate confirmation, cryptographic signature — recorded in an immutable governance ledger.' },
+    { label: 'Boundary Steward Certification', text: 'Four-module program producing verifiable institutional governance competency. Graduates are authorized to oversee, audit, and defend the boundary in regulatory proceedings.' },
+    { label: 'Boundary Learning Debrief', text: 'Structured protocol producing a permanent institutional governance audit trail — steward comprehension, scenario responses, system interpretation accuracy.' },
+    { label: 'Compliance Evidence Export', text: 'Standardized procedures for exporting certificate records, observability metrics, transformation logs, and policy version history to regulatory bodies.' }
+  ],
+  showTiers: true,
+  tiers: [
+    ['L1', 'Boundary Aware', 'Clinical and operational personnel — understands the boundary\'s purpose'],
+    ['L2', 'Boundary Stewards', 'Monitors system, interprets signals, supports regulatory audits'],
+    ['L3', 'Escalation Responders', 'Resolves fail-closed events without compromising boundary integrity'],
+    ['L4', 'Policy Governance', 'Evaluates transformation policies, prevents identity leakage risk'],
+    ['L5', 'Architectural Custodians', 'Designs, deploys, and scales ZPCB implementations']
+  ],
+  analogy: 'Consider every HIPAA audit you have prepared for: stacks of policy documents and access logs that describe what should have occurred. ZPCB replaces "should have" with "mathematically did not." That is a categorically different conversation with a regulatory examiner — and a categorically different burden of proof.',
+  implication: 'ZPCB gives your compliance function something it has never had before: evidence that is architecturally produced, not administratively assembled. In a regulatory proceeding, that distinction is the difference between a policy defense and a mathematical proof.'
+},
+
+clinician: {
+  badge: 'Healthcare / Clinical',
+  source: 'ZPCB Five-Minute Overview · Resilience Alignment Brief',
+  title: 'Advanced AI That Sees the Signal, Not the Patient',
+  statement: 'ZPCB changes what the system is allowed to remember. Your patients receive AI-assisted care. Their identities do not persist where they are not needed.',
+  body: 'As clinical AI systems become central to diagnosis, risk detection, and decision support, a governance challenge emerges alongside the clinical benefit: these systems observe sensitive patient information that should not persist beyond the care environment where it is needed. ZPCB establishes the architectural boundary that enforces this principle. Clinical AI can observe patient signals and generate actionable insight. The identity behind those signals is transformed and destroyed before it ever reaches an analytics platform, research database, or downstream system that does not require it.',
+  points: [
+    { label: 'Insight Without Exposure', text: 'AI analytics observe clinical signals and produce diagnostic value. Patient identity is destroyed before it persists — the insight remains, the exposure does not.' },
+    { label: 'Care Continuity', text: 'Downstream clinical signals — diagnoses, treatment pathways, risk alerts — persist normally within authorized care systems. Only identity-bearing data is boundary-enforced.' },
+    { label: 'Workflow Unchanged', text: 'Clinicians interact with systems exactly as before. ZPCB operates transparently within existing clinical infrastructure — it changes what the system holds, not how you use it.' },
+    { label: 'HIPAA Architecture', text: 'Compliance is structurally enforced rather than policy-dependent. Cryptographic audit evidence is produced automatically — not assembled by compliance teams after the fact.' }
+  ],
+  analogy: 'Imagine a specialist who reviews your patient\'s complete chart, provides a precise clinical recommendation, and then has every identifying detail professionally erased from their memory before leaving the consultation room. The clinical insight enters the care pathway. The exposure does not leave the boundary.',
+  implication: 'The question patients and regulators will begin asking is not "is my data secure?" — it is "why does this system need to remember who I am beyond the point of care?" ZPCB gives your institution the architectural answer before that question becomes a crisis or a headline.'
+},
+
+pilot: {
+  badge: 'Cleveland Clinic · Pilot Evaluator',
+  source: 'ZPCB Resilience Alignment Brief · Five-Minute Overview',
+  title: 'A Governance Architecture Designed Around Your Priorities',
+  statement: 'ZPCB does not ask Cleveland Clinic to adopt a new technology. It proposes a governance architecture built around the resilience, compliance, and trust priorities you already hold.',
+  body: 'Healthcare resilience programs prioritize three objectives: protecting patient information, maintaining operational continuity during crisis conditions, and demonstrating regulatory compliance to internal and external stakeholders. The ZPCB framework was structured specifically to support these three priorities through four interlocking governance layers — each addressing a distinct institutional need without disrupting existing clinical workflows or operational infrastructure.',
+  showLayers: true,
+  layers: [
+    ['01', 'Governance Doctrine', 'Formalizes institutional rules for AI-assisted systems — stewardship roles, boundary enforcement principles, audit authority'],
+    ['02', 'Architectural Data Boundary', 'Prevents identity-bearing data from persisting outside authorized clinical systems — zero-trust gates, fail-closed logic, transient environments'],
+    ['03', 'Operational Evidence', 'Continuous proof that governance boundaries remain intact — dashboards, integrity alerts, standardized compliance export'],
+    ['04', 'Workforce Competency', 'Tiered certification ensuring personnel understand and can responsibly govern AI-assisted systems at scale']
+  ],
+  points: [
+    { label: 'Pilot Objective', text: 'Demonstrate that sensitive clinical data can be safely transformed into research-ready analytical signals without allowing identity data to persist.' },
+    { label: 'Dual Validation', text: 'The pilot establishes both technical validation of the ZPCB architecture and institutional governance readiness — two distinct deliverables for leadership.' },
+    { label: 'Interdisciplinary Scope', text: 'ZPCB governance intersects clinical safety, cybersecurity, regulatory compliance, enterprise risk, and digital strategy — designed for cross-departmental review.' },
+    { label: 'No Replacement', text: 'ZPCB complements existing Cleveland Clinic AI programs. It addresses the governance gaps those programs are still actively developing — not the programs themselves.' }
+  ],
+  analogy: 'ZPCB does not arrive as a solution looking for a problem. It arrives as a governance architecture structured around the problems Cleveland Clinic is already solving — and offers a verifiable, cryptographically-auditable framework for demonstrating that those problems remain solved over time.',
+  implication: 'An interdisciplinary review by Cleveland Clinic governance bodies could provide valuable insight into whether ZPCB elements align with emerging institutional priorities. The framework is offered for exactly that conversation — not as a product pitch, but as a governance dialogue with a defined, auditable architecture behind it.'
+},
+
+safety: {
+  badge: 'Campus Safety / Security',
+  source: 'Sovereign Guardian Framework · D.A.M.S.',
+  title: 'Situational Awareness Without the Surveillance Record',
+  statement: 'The Sovereign Guardian system sees everything it needs to see. It retains nothing it is not authorized to retain. And it can prove both — mathematically, on every patrol.',
+  body: 'Traditional campus surveillance infrastructure creates a fundamental tension for healthcare environments: the same systems that protect patients and staff also generate surveillance records that conflict with healthcare privacy standards, create Fourth Amendment exposure, and become cybersecurity liabilities the moment they are stored. The Sovereign Guardian Framework resolves this tension architecturally. Sensory data is processed in volatile memory only. If no alert condition is triggered, the data is destroyed before it can be written to any storage system. The system is structurally incapable of building a surveillance record.',
+  showCert: true,
+  points: [
+    { label: 'RAM Flush Architecture', text: 'Identity-bearing data — facial profiles, biometric signatures, location histories — exists in volatile memory only. Flush or match. It never touches disk storage.' },
+    { label: 'Fail-Closed Integrity', text: 'Cryptographically signed firmware. Continuous runtime validation. Any configuration anomaly triggers immediate sensor shutdown and return to base — blind.' },
+    { label: 'Vulnerability Weighting', text: 'The Lifeboat Protocol prioritizes vulnerable individuals — children, injured persons — in multi-threat scenarios. Architecturally enforced, not operator-dependent.' },
+    { label: 'No Subpoenable Record', text: 'Courts cannot subpoena what does not exist. The Certificate of Omission is a mathematical proof that no identity record was created — not a claim, a structural attestation.' }
+  ],
+  analogy: 'Conventional surveillance cameras are witnesses that remember everything and forget nothing. The Sovereign Guardian is a witness that registers only what matters, and whose memory is constitutionally sealed the moment the alert is resolved or cleared. It protects without recording. It responds without watching.',
+  implication: 'Healthcare campuses that deploy the Sovereign Guardian can offer patients, staff, and the surrounding community something no traditional surveillance program can: a mathematically verifiable promise that safety monitoring does not come at the cost of privacy. That is not a marketing statement. It is a cryptographic proof artifact generated after every patrol.'
+},
+
+investor: {
+  badge: 'Capital / Venture',
+  source: 'Full ZPCB Document Stack',
+  title: 'The Governance Primitive for the AI Economy',
+  statement: 'ZPCB is not a compliance product. It is the constitutional governance layer that makes AI deployment legally operable across every regulated industry — at scale.',
+  body: 'The trillion-dollar AI opportunity in healthcare, financial services, autonomous systems, and enterprise infrastructure runs directly into a regulatory wall the moment it touches identity data. Every major AI deployment in a regulated environment needs what ZPCB provides — not as a feature, but as the foundational governance layer that makes the deployment defensible. ZPCB does not compete with clinical AI, drone logistics, or financial analytics platforms. It is the constitutional infrastructure those platforms must run on to be commercially viable in regulated markets.',
+  points: [
+    { label: 'Market Architecture', text: 'Healthcare AI, KYC compliance, autonomous vehicles, enterprise AI governance, and Web3 agent commerce are separate verticals — each a distinct licensing engagement under the same constitutional core.' },
+    { label: 'Compounding Moat', text: 'Governance Charter sovereignty, Boundary Steward institutional lock-in, Certificate of Omission as the legal standard — each deployment strengthens the precedent for the next.' },
+    { label: 'IP Sovereignty Structure', text: 'Foundation → IP Holding Company → Operating LLCs. The constitutional layer never lives where the partnerships live. Field-of-use licensing per vertical, per geography.' },
+    { label: 'Network Effect', text: 'Each certified institution creates governance precedent that reduces friction for subsequent deployments. The standard becomes the infrastructure.' }
+  ],
+  analogy: 'TCP/IP did not compete with the internet. It made the internet possible. ZPCB does not compete with the AI applications being deployed across regulated industries. It provides the governance layer that makes those applications legally, ethically, and regulatorily viable at institutional scale. Infrastructure plays at this layer tend to win quietly — and completely.',
+  implication: 'The question is not whether regulated industries will require what ZPCB provides. They already do. They simply do not yet have it. The question is who owns the constitutional layer of the machine economy when they come looking — and whether that ownership is sovereign or already acquired.'
+},
+
+regulator: {
+  badge: 'Policy / Government',
+  source: 'ZPCB Governance Charter · Sovereign Guardian Framework',
+  title: 'From Self-Attested Compliance to Architecturally Enforced Proof',
+  statement: 'For the first time, privacy compliance can be mathematically verified rather than administratively asserted. ZPCB makes "did not retain" a provable statement, not a policy promise.',
+  body: 'Current privacy and AI governance regulation relies almost entirely on institutional self-attestation: policy documentation, access control records, and compliance officer declarations that describe intended behavior. ZPCB introduces a new category of regulatory evidence — cryptographic proof of omission — that provides third-party verifiable mathematical attestation that identity-bearing data did not persist beyond authorized boundaries during a specific, time-stamped operational window. This is not an improvement on existing compliance evidence. It is a categorically different class of evidence.',
+  points: [
+    { label: 'Mathematical Evidence Class', text: 'Certificates of Omission provide externally verifiable cryptographic proof — not policy assertions. Any regulator with access to the governance ledger can independently verify every transformation event.' },
+    { label: 'Fail-Closed Architecture', text: 'Compliance is not dependent on human adherence to policy. The architecture makes non-compliance structurally impossible — not discouraged, not monitored for, but impossible.' },
+    { label: 'Standardized Export', text: 'Consistent audit evidence procedures across deployments — certificate records, observability metrics, transformation logs, policy version history — enable regulatory review at scale.' },
+    { label: 'AI Governance Precedent', text: 'ZPCB establishes a replicable model for how autonomous systems can operate in regulated environments with verifiable, architecturally-enforced accountability.' }
+  ],
+  analogy: 'Current privacy regulation requires institutions to promise they wash their hands. ZPCB installs a sensor that cryptographically records and seals every relevant event, producing a tamper-proof, independently verifiable log. The promise becomes a proof. The self-attestation becomes a mathematical record. That is a different regulatory instrument entirely.',
+  implication: 'ZPCB represents a policy opportunity: the ability to establish a standard where "compliance" means architecturally-enforced, cryptographically-verified behavioral evidence — not documented intention. That standard, once established in healthcare, extends naturally to financial services, autonomous systems, and AI governance across regulated industries.'
+},
+
+operator: {
+  badge: 'Drone / Autonomous Systems',
+  source: 'D.A.M.S. · Sovereign Guardian Framework',
+  title: 'The Dunny Protocol: Privacy by Architecture, Not by Policy',
+  statement: 'Your system sees what it needs to see. Processes what it is authorized to process. And proves — cryptographically, on every mission — that it retained nothing it was not supposed to retain.',
+  body: 'The D.A.M.S. network operates on a structural principle: identity-bearing data lives only in volatile RAM just long enough to complete the authorized analytic check. No match? Flushed. No disk write occurs. The system literally cannot remember what it was not authorized to remember. If an operator or external actor attempts to alter that behavior mid-operation, the Execution Integrity Gate trips, sensory ingestion halts immediately, and the system returns to base blind. It does not degrade. It does not negotiate. It fails closed.',
+  showCert: true,
+  points: [
+    { label: 'RAM Flush Protocol', text: 'Identity data in volatile memory only. The analytic check runs. If no authorized alert condition is met, the data is destroyed before any write operation can execute.' },
+    { label: 'Drongo-Proof Gate', text: 'Cryptographically signed firmware. Continuous runtime integrity validation. Configuration drift triggers immediate operational halt — no override path exists by design.' },
+    { label: 'Lifeboat Protocol', text: 'Vulnerability weighting prioritizes children, injured individuals, and vulnerable entities in multi-threat scenarios — architecturally enforced, operator cannot override.' },
+    { label: 'Certificate of Omission', text: 'End of every operational window: signed cryptographic attestation of incidental identities processed, identities retained (zero), boundary status (cleared). Your operational shield.' }
+  ],
+  analogy: 'Conventional surveillance drones are cameras with wings — they remember everything until someone deletes it. A ZPCB-compliant system is constitutionally blind by architecture. It responds to what matters. It cannot retain what it was not authorized to retain. That distinction is the difference between a municipal contract and a federal liability.',
+  implication: 'You are not operating surveillance infrastructure. You are operating a Guardian Angel network with a mathematically sealed privacy record on every mission. When a regulator, attorney, or city council asks what your system retains, your answer is not a policy document. It is a signed cryptographic proof that the answer is nothing.'
+},
+
+partner: {
+  badge: 'Strategic Partner · Long Game',
+  source: 'Full ZPCB Constitutional Architecture',
+  title: 'What Is Actually Being Built Here',
+  statement: 'This is not a healthcare product. This is a governance primitive — the constitutional layer that makes AI deployment defensible across every regulated industry in the world.',
+  body: 'The Joseph & Margaret Ivy Foundation sits at the top of a holding structure that houses the intellectual property of something the world has not yet named. ZPCB began as a healthcare data governance architecture. It has since been validated in drone logistics, financial services compliance, autonomous vehicle safety, diplomatic sovereignty contexts, and the emerging machine-to-machine economy on Ethereum. The same constitutional core — the Zero-Persistence Mandate — governs all of it. That is not coincidence. That is architectural universality.',
+  points: [
+    { label: 'The Foundation Story', text: 'Joseph H. Ivy Jr. — dignity, discretion, and care in the most sensitive human moments. Margaret Ivy — twenty years translating complex concepts into language every learner could receive. Their grandson built the infrastructure that protects what institutions cannot govern alone.' },
+    { label: 'The IP Architecture', text: 'Foundation → IP Holding Company → Operating LLCs. The constitutional core never lives where the partnerships live. Field-of-use licensing per vertical ensures sovereignty is structural, not rhetorical.' },
+    { label: 'The Ohio Strategy', text: 'Cleveland Clinic validates ZPCB in healthcare. Huntington Bank opens financial services. Zipline opens autonomous logistics. Each Ohio anchor makes the next national conversation shorter.' },
+    { label: 'The Adaptive Platform', text: 'What you are looking at right now — a document that explains the same architecture in twelve different cognitive languages — is itself a product category. Adaptive explainer infrastructure for complex knowledge.' }
+  ],
+  analogy: 'Most founders build a company. What is being built here is a constitutional institution — one that governs how sensitive information moves through autonomous systems, with a cryptographic proof standard, a five-tier human stewardship model, and a foundation named after the two people whose life\'s work makes the mission legible. That is a different kind of enterprise.',
+  implication: 'The goal is not acquisition. The goal is sovereignty — to own the constitutional layer of something the world uses, built on a foundation named after people who understood that the most important work is often done quietly, with precision, for people who cannot protect themselves. That is the long game. And it is already in motion.'
+},
+
+allseeing: {
+  badge: 'Observability · Stewardship Level 2.5',
+  source: 'ZPCB Governance Charter Article X · Boundary Steward Certification Module 2 Addendum',
+  title: 'The All Seeing Boundary: What the System Sees, What It Proves, What It Never Holds',
+  statement: 'The All Seeing Boundary monitors every signal the boundary produces. It sees everything that passes through. It retains nothing that should not be retained. And it proves both — in real time, on every transformation event.',
+  body: 'Designated Level 2.5 within the ZPCB stewardship hierarchy, The All Seeing Boundary occupies the operational space between the Boundary Steward (L2) and the Escalation Responder (L3). It is the role that watches the watchers — monitoring Certificate of Omission streams, interpreting boundary health signals across institutional observability dashboards, and coordinating Cross-Departmental Audit Event Simulations before regulatory examiners arrive. The All Seeing Boundary does not enforce the boundary. The architecture does that. The All Seeing Boundary ensures that the evidence of enforcement is complete, verifiable, and continuously auditable.',
+  showCert: true,
+  points: [
+    { label: 'Certificate of Omission Monitoring', text: 'Real-time surveillance of CoO output streams. Verifies certificate generation at expected volumes, correct policy version identifiers, and absence of gap events indicative of boundary disruption.' },
+    { label: 'Grafana Dashboard Coordination', text: 'Configures and maintains department-specific observability views for clinical, compliance, security, and risk management teams. Same underlying CoO data. Calibrated views per governance role.' },
+    { label: 'Audit Event Simulation', text: 'Coordinates Cross-Departmental Audit Event Simulations — identity injection attempts, policy misconfiguration tests, fail-closed validation scenarios — generating a pre-audit Certificate of Omission archive.' },
+    { label: 'Anomaly Escalation Protocol', text: 'When observability signals exceed defined threshold parameters, The All Seeing Boundary initiates formal escalation to the Escalation Responder tier. All escalation events are recorded in the immutable governance ledger.' },
+    { label: 'Purple AI Companion Interface', text: 'The Purple AI Companion operates in advisory support of this role — assisting with signal interpretation, anomaly classification, and compliance evidence preparation. Advisory only. The All Seeing Boundary retains sole operational authority.' },
+    { label: 'Certification Requirement', text: 'Role designation requires completion of Boundary Steward Certification Module 2 plus the All Seeing Boundary Operational Track Addendum. Designation is recorded in the institutional governance ledger.' }
+  ],
+  analogy: 'Every air traffic control tower sees every aircraft in its airspace. It does not fly the planes. It does not land them. It monitors their signals, verifies their positions, and ensures that any deviation from authorized parameters is escalated immediately. The All Seeing Boundary is the air traffic control tower for the ZPCB persistence boundary — seeing everything, intervening when necessary, and producing a continuous verifiable record that the boundary performed correctly throughout every operational window.',
+  implication: 'The gap between a governance framework that works and a governance framework that can be proven to work is the observability layer. The All Seeing Boundary closes that gap. When a regulatory examiner arrives, they do not receive a policy document. They receive a cross-departmental archive of Certificate of Omission artifacts, simulation validation records, and real-time boundary health logs — produced continuously by a designated steward whose role is constitutionally defined, certification-verified, and recorded in the institutional governance ledger.'
+}
+
+};
+
+function selectPersona(key, btn) {
+  document.querySelectorAll('.persona-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const p = data[key];
+  const card = document.getElementById('explanationCard');
+  const content = document.getElementById('cardContent');
+  const empty = document.getElementById('emptyState');
+
+  empty.style.display = 'none';
+  content.style.display = 'block';
+
+  // Layers table
+  const layersHTML = p.showLayers ? `
+    <hr class="section-divider">
+    <div class="block-label anim d2">Four Governance Layers</div>
+    <table class="layers-table anim d2">
+      <thead><tr><th>#</th><th>Layer</th><th>Function</th></tr></thead>
+      <tbody>${p.layers.map(l => `<tr><td>${l[0]}</td><td>${l[1]}</td><td>${l[2]}</td></tr>`).join('')}</tbody>
+    </table>
+  ` : '';
+
+  // Stewardship tiers
+  const tiersHTML = p.showTiers ? `
+    <hr class="section-divider">
+    <div class="block-label anim d2">Five-Tier Stewardship Model</div>
+    <div class="tier-list anim d2">
+      ${p.tiers.map(t => `
+        <div class="tier-row">
+          <div class="tier-num">${t[0]}</div>
+          <div class="tier-title">${t[1]}</div>
+          <div class="tier-desc">${t[2]}</div>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
+  // Alignment table
+  const alignHTML = p.showAlign ? `
+    <hr class="section-divider">
+    <div class="block-label anim d3">Legal & Clinical Alignment Matrix</div>
+    <table class="align-table anim d3">
+      <thead><tr><th>ZPCB Mechanism</th><th>Clinical / HIPAA Alignment</th><th>Legal Protection</th></tr></thead>
+      <tbody>${p.alignRows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody>
+    </table>
+  ` : '';
+
+  // Certificate mockup
+  const certHTML = p.showCert ? `
+    <hr class="section-divider">
+    <div class="block-label anim d3">Certificate of Omission — Sample Output</div>
+    <div class="cert-block anim d3">
+      <div class="cert-head">--- BOUNDARY INTEGRITY CHECK ---</div>
+      <div class="cert-key">Mission Authorization Gate: <span class="cert-pass">PASSED ✓</span></div>
+      <div class="cert-key">Execution Integrity: <span class="cert-pass">PASSED — No Configuration Drift Detected</span></div>
+      <div class="cert-key">Firmware Digest: <span style="color:rgba(248,245,240,0.4)">a94a8fe5ccb19ba61c4c0873d391e987982fbbd3</span></div>
+      <div class="cert-key">Policy Hash: <span style="color:rgba(248,245,240,0.4)">5d41402abc4b2a76b9719d911017c592</span> — Surveillance Mode: DISABLED</div>
+      <br>
+      <div class="cert-head">--- DATA VOLATILITY ATTESTATION ---</div>
+      <div>Incidental Identities Processed (RAM): <span style="color:rgba(248,245,240,0.7)">[operational count]</span></div>
+      <div>Identities Retained (Disk): <span class="cert-zero">0</span></div>
+      <div>Volatile Boundary Status: <span class="cert-zero">FLUSHED & SANITIZED</span></div>
+      <br>
+      <div class="cert-head">--- CRYPTOGRAPHIC SEAL ---</div>
+      <div class="cert-pass">This certificate mathematically proves that no identity-bearing data</div>
+      <div class="cert-pass">persisted beyond the volatile processing boundary during this operational window.</div>
+    </div>
+  ` : '';
+
+  // Analogy
+  const analogyHTML = p.analogy ? `
+    <div class="analogy-block anim d3">
+      <div class="analogy-label">Plain Language Analogy</div>
+      <div class="analogy-text">${p.analogy}</div>
+    </div>
+  ` : '';
+
+  content.innerHTML = `
+    <div class="card-header">
+      <div class="card-badge">${p.badge}</div>
+      <div class="card-title-wrap">
+        <div class="card-title">${p.title}</div>
+        <div class="card-source">${p.source}</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="core-statement anim d1">${p.statement}</div>
+      <div class="explanation-body anim d1">${p.body}</div>
+      ${layersHTML}
+      ${tiersHTML}
+      ${alignHTML}
+      <hr class="section-divider">
+      <div class="block-label anim d3">Key Points</div>
+      <div class="points-grid anim d3">
+        ${p.points.map(pt => `
+          <div class="point-card">
+            <div class="point-label">${pt.label}</div>
+            <div class="point-text">${pt.text}</div>
+          </div>
+        `).join('')}
+      </div>
+      ${analogyHTML}
+      ${certHTML}
+      <div class="implication anim d4">
+        <div class="implication-label">What This Means For You</div>
+        <div class="implication-text">${p.implication}</div>
+      </div>
+    </div>
+  `;
+
+  card.classList.add('visible');
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+
+</body>
+</html>
+
